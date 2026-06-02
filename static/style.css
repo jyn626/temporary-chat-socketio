@@ -1,0 +1,68 @@
+
+/* Root elements */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* General elements */
+.input-contain {
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    display: flex;
+    flex-direction: column-reverse;
+    pointer-events: none;
+}
+#msgBox {
+    z-index: 1;
+    width: 100%;
+    height: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    pointer-events: all;
+    outline: none;
+    border: 0px solid;
+    border-top-width: 2px;
+}
+#sendBtn {
+    z-index: 1;
+    position: absolute;
+    width: 6rem;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    border: 0px solid;
+    margin-bottom: 1.15rem;
+    margin-right: 0.2rem;
+    font-weight: bolder;
+    align-self: last baseline;
+    color: #ffffff;
+    background-color: #0087b1;
+    pointer-events: all;
+}
+
+#msgContain {
+    z-index: 0;
+    width: 100%;
+    height: auto;
+}
+#msgContain p {
+    z-index: 0;
+    width: fit-content;
+    border: 0px solid;
+    border-radius: 10px;
+    border-bottom-left-radius: 0px;
+    padding: 0.5rem;
+    margin: 1rem;
+    align-self: last baseline;
+    font-size: 1.3rem;
+    color: white;
+    background-color: #009fcf;
+}
+.msg-footer {
+    width: 100%;
+    text-align: center;
+    margin-top: 2rem;
+    color: #8d8d8d;
+}
