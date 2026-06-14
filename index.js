@@ -34,7 +34,7 @@ const generate_username = () => {
 io.on("connection", (sock) => {
     chatService.clear_chats();
 
-    // if a client joined then add them to our users array
+    // if a client joined, then generate a random username associated with their socket id
     chatService._users[sock.id] = generate_username();
 
     console.log(`New device: ${sock.id}`);
