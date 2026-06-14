@@ -44,7 +44,7 @@ const renderMessages = (list) => {
         name.className = "name";
         message.className = "msg";
 
-        name.textContent = msg.user_name;
+        name.textContent = msg.username;
         message.textContent = msg.message;
 
         msg_contain.appendChild(name);
