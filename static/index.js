@@ -1,7 +1,8 @@
 const urlParams = new URLSearchParams(window.location.search);
 const socket = io("/", {
     query: {
-        username: urlParams.get("username")
+        username: urlParams.get("username"),
+        lobby: urlParams.get("lobby")
     }
 });
 

@@ -61,11 +61,15 @@ export class ChatService {
      * @param {string} announce_msg - The text content of the announcement to be sent.
      * @returns {null}
      */
-    global_announce(announce_msg) {
+    lobby_announce(announce_msg) {
         let chat = new Chat("server_67", announce_msg, `admin_mangos`);
 
         this._global_chats.push(chat);
-        this.server.emit("message_update", this.get_chats());
+        //this.server.emit("message_update", this.get_chats());
+
+        this._all_users_id.map((id) => {
+            this.server.to(id).emit("message_update", this.get_chats(id));
+        });
     }
 
     /**
@@ -94,7 +98,7 @@ export class ChatService {
      */
     disconnect(user_id) {
         let username = String(this._users[user_id]);
-        this.global_announce(`${username} left, sadly :(`);
+        this.lobby_announce(`${username} left, sadly :(`);
         delete this._users[user_id];
     }
 }
