@@ -1,4 +1,9 @@
-const socket = io("/");
+const urlParams = new URLSearchParams(window.location.search);
+const socket = io("/", {
+    query: {
+        username: urlParams.get("username")
+    }
+});
 
 const msgBox = document.getElementById("msgBox");
 const sendBtn = document.getElementById("sendBtn");

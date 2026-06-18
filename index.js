@@ -3,12 +3,15 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import express from "express";
 import { Chat } from "./models/chat.model.js";
-import { chatService } from "./services/chat.service.js";
+import { ChatService } from "./services/chat.service.js";
 const app = express();
 const server = createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-// App setup
+//Testing chatservice
+const chatService = new ChatService(io);
+
+// App setup 
 app.set("view engine", "ejs");
 app.use(express.static("static"));
 
@@ -25,23 +28,25 @@ server.listen(port, () => {
 });
 
 const generate_username = () => {
-    const ran_index = Math.floor(Math.random() * (8 - 0 + 1));
+    const min = 0, max = conf.random_usernames.length-1;
+    const ran_index = Math.floor(Math.random() * (max - min + 1));
     return conf.random_usernames[ran_index];
 };
 
-/** @type {Chat[]} global_chats */
 // Socket handle for each client
 io.on("connection", (sock) => {
     chatService.clear_chats();
+    const query_username = sock.handshake.query.username;
+    let getUsername;
 
-    // if a client joined, then generate a random username associated with their socket id
-    chatService._users[sock.id] = generate_username();
+    if (query_username != 'null') 
+        getUsername = query_username;
+    else 
+        getUsername = generate_username();
 
-    console.log(`New device: ${sock.id}`);
-
-    chatService.addUserIdToAllUsersIdMap(sock.id);
+    // if a client joined, then 
+    chatService.add_user(sock.id, getUsername);
     chatService.global_announce(
-        io,
         `New user has arrived '${chatService._users[sock.id]}'.`,
     );
 
@@ -54,7 +59,6 @@ io.on("connection", (sock) => {
         // Rules
         if ([...data].length >= 500) {
             chatService.global_announce(
-                io,
                 `${chatService._users[sock.id]} too long of a message man...`,
             );
             return;
@@ -65,7 +69,6 @@ io.on("connection", (sock) => {
         let chat = new Chat(chatService._users[sock.id], data, sock.id);
 
         chatService._global_chats.push(chat);
-        console.log("global chat", chatService._global_chats);
         chatService._all_users_id.map((id) => {
             io.to(id).emit("message_update", chatService.get_chats(id));
         });
@@ -74,9 +77,6 @@ io.on("connection", (sock) => {
     // Announce disconnected clients
     sock.on("disconnect", () => {
         chatService.clear_chats();
-
-        let username = String(chatService._users[sock.id]);
-        chatService.global_announce(io, `${username} left, sadly :(`);
-        delete chatService._users[sock.id];
+        chatService.disconnect(sock.id);
     });
 });

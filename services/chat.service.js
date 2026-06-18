@@ -1,24 +1,34 @@
 import { Chat } from "../models/chat.model.js";
 import { conf } from "../config.js";
+import { paramRequired } from "../utils/helpers.js";
+import { Server } from "socket.io";
 
-class ChatService {
-    constructor() {
+export class ChatService {
+    /**
+     * @param {Server} io 
+     */
+    constructor(io = paramRequired()) {
         /**
          * this variables are private,
          * only modify them inside this class
          */
+        this.server = io;
         this._global_chats = [];
         this._all_users_id = []; // TODO: this as a Map class instead of an array
         this._users = {};
     }
 
     /**
-     * @desc Registers a new socket connection ID by appending it to the
-     * global list of active user IDs.
-     * * @param {string} sock_id - The unique socket or connection identifier for the user.
+     * @desc Registers a new socket connection ID and
+     * generate a random username associated with their socket id.
+     *
+     * @param {string} sock_id - The unique socket or connection identifier for the user.
+     * @param {string} username - Username display for the specified identifier.
      */
-    addUserIdToAllUsersIdMap(sock_id) {
+    add_user (sock_id, username) {
+        this._users[sock_id] = username;
         this._all_users_id.push(sock_id);
+        console.log(`New device: ${sock_id}`);
     }
 
     /**
@@ -51,11 +61,11 @@ class ChatService {
      * @param {string} announce_msg - The text content of the announcement to be sent.
      * @returns {null}
      */
-    global_announce(io, announce_msg) {
+    global_announce(announce_msg) {
         let chat = new Chat("server_67", announce_msg, `admin_mangos`);
 
         this._global_chats.push(chat);
-        io.emit("message_update", this.get_chats());
+        this.server.emit("message_update", this.get_chats());
     }
 
     /**
@@ -77,6 +87,14 @@ class ChatService {
             this._global_chats.push(chat);
         }
     }
-}
 
-export const chatService = new ChatService();
+    /**
+     * @desc Method to handle socket disconnects with provided socket id.
+     * @param {string} user_id 
+     */
+    disconnect(user_id) {
+        let username = String(this._users[user_id]);
+        this.global_announce(`${username} left, sadly :(`);
+        delete this._users[user_id];
+    }
+}
