@@ -1,5 +1,5 @@
 const urlParams = new URLSearchParams(window.location.search);
-const socket = io("/", {
+const socket = io("/chats", {
     query: {
         username: urlParams.get("username"),
         lobby: urlParams.get("lobby")

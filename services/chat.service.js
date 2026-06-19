@@ -6,8 +6,9 @@ import { Server } from "socket.io";
 export class ChatService {
     /**
      * @param {Server} io 
+     * @param {String} lobby_name  
      */
-    constructor(io = paramRequired()) {
+    constructor(io = paramRequired(), lobby_name) {
         /**
          * this variables are private,
          * only modify them inside this class
@@ -16,6 +17,8 @@ export class ChatService {
         this._global_chats = [];
         this._all_users_id = []; // TODO: this as a Map class instead of an array
         this._users = {};
+
+        this.lobby_announce(`Welcome to '${lobby_name}'.`);
     }
 
     /**
@@ -55,6 +58,19 @@ export class ChatService {
     }
 
     /**
+     * @desc Update the messages for all clients.
+     * @returns {null}
+     */
+    update_messages() {
+        this._all_users_id.map((id) => {
+            this.server.to(id).emit(
+                "message_update", 
+                this.get_chats(id)
+            );
+        });
+    }
+
+    /**
      * @desc Broadcasts a system-wide announcement message from the admin account,
      * saves it to the global chat history, and emits the updated chat logs to all connected clients.
      * * @param {Server} io - The Socket.IO server instance used to broadcast the update.
@@ -67,9 +83,9 @@ export class ChatService {
         this._global_chats.push(chat);
         //this.server.emit("message_update", this.get_chats());
 
-        this._all_users_id.map((id) => {
-            this.server.to(id).emit("message_update", this.get_chats(id));
-        });
+        this.update_messages();
+        //console.log(this._all_users_id);
+        //console.log(this._users);
     }
 
     /**
@@ -98,7 +114,10 @@ export class ChatService {
      */
     disconnect(user_id) {
         let username = String(this._users[user_id]);
+        let filtered_id = this._all_users_id.filter(id => (id != user_id));
+
         this.lobby_announce(`${username} left, sadly :(`);
+        this._all_users_id = filtered_id;
         delete this._users[user_id];
     }
 }
