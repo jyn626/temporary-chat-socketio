@@ -1,5 +1,5 @@
 import { Chat } from "../models/chat.model.js";
-import { conf } from "../config.js";
+import { conf, sec, min, hour } from "../config.js";
 import { paramRequired } from "../utils/helpers.js";
 import { Server } from "socket.io";
 
@@ -7,8 +7,11 @@ export class ChatService {
     /**
      * @param {Server} io 
      * @param {String} lobby_name  
+     * @param {String} lobby_id  
+     * @param {Boolean} isTemp  
+     * @param {Number} sec_lifespan  
      */
-    constructor(io = paramRequired(), lobby_name) {
+    constructor(io = paramRequired(), lobby_name, lobby_id) {
         /**
          * this variables are private,
          * only modify them inside this class
@@ -17,8 +20,24 @@ export class ChatService {
         this._global_chats = [];
         this._all_users_id = []; // TODO: this as a Map class instead of an array
         this._users = {};
+        this.lobby_id = lobby_id;
+        this.lobby_name = lobby_name;
+        this.shouldBeDead = false;
 
         this.lobby_announce(`Welcome to '${lobby_name}'.`);
+    }
+
+    /**
+     * @desc Used for temporary chat services or 'lobbies'.
+     *
+     * @param {Number} sec_lifespan  
+     */
+    isTemporary (deadCallback, sec_lifespan = 4*min) {
+        setTimeout(() => {
+            this.lobby_announce("This lobby is dead. Refresh your page..");
+            this.shouldBeDead = true;
+            deadCallback(this.lobby_id);
+        }, sec_lifespan);
     }
 
     /**
@@ -62,6 +81,8 @@ export class ChatService {
      * @returns {null}
      */
     update_messages() {
+        if (this.shouldBeDead) return;
+
         this._all_users_id.map((id) => {
             this.server.to(id).emit(
                 "message_update", 

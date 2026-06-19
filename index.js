@@ -4,6 +4,8 @@ import { Server } from "socket.io";
 import express from "express";
 import { Chat } from "./models/chat.model.js";
 import { ChatService } from "./services/chat.service.js";
+import { randomUUID } from "crypto";
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
@@ -15,15 +17,13 @@ const tempChat = io.of('/temp_chats');
 /**
  * @typedef {Object} LobbyMap
  * @property {ChatService} global
- * @property {ChatService} [chat_1] // Optional property
- * @property {ChatService} [chat_2]
  */
 
 /** @type {LobbyMap} */
 const permanentLobbies = { 
-    global: new ChatService(mainChat, "Global center"), 
-    chat_1: new ChatService(mainChat, "Joe's nutsack"),
-    chat_2: new ChatService(mainChat, "Joe's floorboards") 
+    global: new ChatService(mainChat, "Global center", "global"), 
+    chat_1: new ChatService(mainChat, "Joe's nutsack", "global"),
+    chat_2: new ChatService(mainChat, "Joe's floorboards", "global") 
 };
 
 /** @type {LobbyMap} */
@@ -38,15 +38,43 @@ app.get("/", (req, res) => {
     res.send("Home thing.");
 });
 
-app.get("/new/:id", (req, res) => {
-    const lobby_id = req.params.id;
+app.get("/new/:name", (req, res) => {
+    const lobby_name = req.params.name;
+        const lobby_id = randomUUID().replace(/-/g, '');
 
-    if (lobby_id && lobby_id.trim()) {
-        temporaryLobbies[lobby_id] = new ChatService(tempChat, lobby_id);
-        res.status(200).json({ message: `Lobby has been created: ${req.params.id}` });
+    if (lobby_name && lobby_name.trim() != "") {
+        // Check if a lobby name already exists
+        let nameIsActive = false;
+        for (const key in temporaryLobbies) 
+        {
+            if (temporaryLobbies[key].lobby_name == lobby_name)
+                nameIsActive = true;
+        }
+
+        if (nameIsActive) {
+            res.status(500).json({ message: "Lobby name already exists." });
+            return;
+        }
+
+        const tempLobby = new ChatService(tempChat, lobby_name, lobby_id, true);
+
+        tempLobby.isTemporary((id) => {
+            delete temporaryLobbies[id];
+            console.log(`Killing temporary lobby '${id}'.`);
+        });
+
+        temporaryLobbies[lobby_id] = tempLobby;
+
+        res.status(200).json({ 
+            message: `Lobby '${lobby_name}' has been created`,
+            link: `http://localhost:2025/temp_chats?lobby=${lobby_id}`
+        });
     } else {
-        res.status(500).json({ message: "Cannot create  lobby." });
+        res.status(500).json({ message: "Cannot create a lobby." });
     }
+});
+app.get("/killed", (req, res) => {
+    res.send("The lobby is dead. Goodabye lmao!");
 });
 
 app.get("/chats", (req, res) => {
@@ -69,10 +97,6 @@ const generate_username = () => {
     return conf.random_usernames[ran_index];
 };
 
-// Socket handle for each client
-io.on("connection", (sock) => {
-    console.log("what");
-});
 
 // The permanent chato lobbies.
 mainChat.on("connection", (sock) => {
@@ -127,10 +151,10 @@ mainChat.on("connection", (sock) => {
     });
 });
 
+// The temporary chato lobbies.
 tempChat.on("connection", (sock) => {
     const query = sock.handshake.query;
     let lobby_index;
-    console.log(query.lobby);
 
     if (query.lobby != 'null' && temporaryLobbies[query.lobby]) {
         lobby_index = query.lobby;
@@ -190,3 +214,6 @@ tempChat.on("connection", (sock) => {
     });
 });
 
+// Socket handle for each client
+//io.on("connection", (sock) => {
+//});

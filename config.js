@@ -1,4 +1,8 @@
 
+export const sec = 1000;
+export const min = 60 * sec;
+export const hour = 60 * min;
+
 export const conf = {
 	max_chat_count: 20,
 
