@@ -14,21 +14,21 @@ It has a life span of approximately 4 minutes.
 
 To generate a new temporary chat lobby:
 ```
-http://localhost:2025/new/{desired lobby name}
+http://localhost:2025/chats/new/{desired lobby name}
 ```
 > This will give you a link and message in json format.
 
 To go to the lobby, you can copy the link provided or
 Use this templated link and paste the id.
 ```
-http://localhost:2025/temp_chats?lobby={lobby id}
+http://localhost:2025/chats/temp_chats?lobby={lobby id}
 ```
 
 ---
 You can also add a custom username by adding a username query into
 both the temporary and global chat urls:
 ```
-http://localhost:2025/temp_chats?username={desired user name}
+http://localhost:2025/chats/temp_chats?username={desired user name}
 or
 http://localhost:2025/chats?username={desired user name}
 ```
