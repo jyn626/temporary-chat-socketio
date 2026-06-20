@@ -94,10 +94,6 @@ mainChat.on("connection", (sock) => {
     const query = sock.handshake.query;
     let lobby_index = "global";
 
-    /*
-     *   check if the parameter: ?lobby= is not null and the lobby query --
-     *   exists in the permanentLobbies
-     */
     // Filter each socket request to specific lobbies.
     /** @type {ChatService} */
     const chatService = returnLobbyBaseOnId(sock);
@@ -109,6 +105,7 @@ mainChat.on("connection", (sock) => {
 
     let getUsername;
 
+    // TODO: seperate this
     if (query.username != "null") getUsername = query.username;
     else getUsername = generateUsername(); // if a client joined, then
 
@@ -140,15 +137,6 @@ mainChat.on("connection", (sock) => {
 
 // The temporary chats lobbies.
 tempChat.on("connection", (sock) => {
-    /*
-    * get queries from the frontend
-    * sample ->
-    *
-    * query:
-        username: urlParams.get("username"),
-        lobby: urlParams.get("lobby")
-    */
-
     // Filter each socket request to specific lobbies.
     /** @type {ChatService} */
     const chatService = returnLobbyBaseOnId(sock);
@@ -158,6 +146,7 @@ tempChat.on("connection", (sock) => {
     chatService.clearChats();
     let getUsername;
 
+    // TODO: seperate this
     if (query.username != "null") getUsername = query.username;
     else getUsername = generateUsername(); // if a client joined, then
 
