@@ -8,6 +8,8 @@ const socket = io("/chats", {
 
 const msgBox = document.getElementById("msgBox");
 const sendBtn = document.getElementById("sendBtn");
+const globalTell = document.getElementById("globalTell");
+
 let current_user_id = "";
 
 // Send button functionality
@@ -85,6 +87,7 @@ console.log("-- For debugging purposes only (dont be sus) --");
 // Establish connection
 socket.on("init_connection", (data) => {
     current_user_id = data.id;
+    globalTell.textContent = `You're in ${data.lobby_name}.`;
 });
 
 socket.on("message_update", (data) => {

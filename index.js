@@ -25,12 +25,6 @@ export const tempChat = io.of("/temp_chats");
 /** @type {LobbyMap} */
 
 /** @type {LobbyMap} */
-// ! REFACTOR: since these two objects are doing identical operations, we will just make them into a single data structure.
-// const permanentLobbies = {
-//     global: new ChatService(mainChat, "Global center", "global"),
-//     chat_1: new ChatService(mainChat, "Joe's nutsack", "global"),
-//     chat_2: new ChatService(mainChat, "Joe's floorboards", "global"),
-// };
 
 /*
  * lobbies map
@@ -67,7 +61,7 @@ app.use(express.static("static"));
 // --------- Paths
 app.get("/", (req, res) => {
     res.send(`
-        <a class="link-button lobby-link" href="/chats">Go to Global</a>
+        <a class="link-button lobby-link" href="/chats">Go to Global Chats</a>
     `);
 });
 
@@ -114,7 +108,10 @@ mainChat.on("connection", (sock) => {
         `New user has arrived '${chatService.getUser(sock.id)}'.`,
     );
 
-    sock.emit("init_connection", { id: sock.id });
+    sock.emit("init_connection", { 
+        id: sock.id, 
+        lobby_name: chatService.lobby_name 
+    });
 
     // Receive messages from clients
     sock.on("msg", (data) => {
@@ -138,8 +135,9 @@ mainChat.on("connection", (sock) => {
 // The temporary chats lobbies.
 tempChat.on("connection", (sock) => {
     // Filter each socket request to specific lobbies.
+    
     /** @type {ChatService} */
-    const chatService = returnLobbyBaseOnId(sock);
+    const chatService = returnLobbyBaseOnId(sock, true);
     const query = sock.handshake.query;
     if (!chatService) return;
 
@@ -155,7 +153,10 @@ tempChat.on("connection", (sock) => {
         `New user has arrived '${chatService.getUser(sock.id)}'.`,
     );
 
-    sock.emit("init_connection", { id: sock.id });
+    sock.emit("init_connection", { 
+        id: sock.id,
+        lobby_name: chatService.lobby_name
+    });
 
     // Receive messages from clients
     sock.on("msg", (data) => {
